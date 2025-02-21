@@ -64,22 +64,7 @@
     font-size: 3rem;
 }
 
-.store-card
-{
-    width: 80%;
-}
-
-.discover-content
-{
-    padding: 4rem;
-    height: auto;
-}
-
 /* Footer Styles */
-
-.text-brown {
-    color: #875b3d;
-}
 
 .social-link {
     transition: all 0.3s ease;
@@ -96,18 +81,6 @@
 
 footer ul li i {
     min-width: 25px;
-}
-
-/* Menu page */
-
-.nav-pills .nav-link {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #92623f;
-}
-
-.nav-pills .nav-link:hover {
-    color: black;
 }
 
 /* Responsive */
@@ -139,15 +112,6 @@ footer ul li i {
     .content-section
     {
         margin-top: -10rem;
-    }
-    .discover-content
-    {
-        padding: 1.5rem;
-    }
-    .img-services
-    {
-        width: 100px;
-        height: 100px;
     }
     footer h3 {
         text-align: center;
