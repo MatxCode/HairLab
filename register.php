@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Envoi de l'email de confirmation
             $subject = "Activation de votre compte";
             $message = "Cliquez sur ce lien pour activer votre compte : http://localhost/verify.php?token=$token";
-            sendEmail($email, $subject, $message);
+            //sendEmail($email, $subject, $message);
 
             $_SESSION['success'] = "Un email de confirmation a été envoyé.";
             header("Location: login.php");
@@ -126,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         <?php endif; ?>
 
-                        <form action="traitement/register.php" method="POST">
+                        <form action="register.php" method="POST">
                             <div class="row">
                                 <!-- Prénom -->
                                 <div class="col-md-6 mb-4">
