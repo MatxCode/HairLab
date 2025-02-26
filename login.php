@@ -1,3 +1,36 @@
+<?php
+session_start();
+require_once 'config/database.php'; // Fichier contenant la connexion à la base de données
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    if (!empty($email) && !empty($password)) {
+        // Vérifier si l'utilisateur existe
+        $sql = "SELECT id, nom, prenom, password FROM users WHERE email = :email";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user['password'])) {
+            // Authentification réussie : on stocke les infos en session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['prenom'] . ' ' . $user['nom'];
+
+            // Redirection vers la page de profil
+            header("Location: profil.php");
+            exit;
+        } else {
+            $error = "Email ou mot de passe incorrect.";
+        }
+    } else {
+        $error = "Veuillez remplir tous les champs.";
+    }
+}
+?>
+
 <!doctype html>
 <html lang="fr">
 
