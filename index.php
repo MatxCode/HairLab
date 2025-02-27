@@ -37,7 +37,9 @@ session_start();
                                     <a class="nav-link" href="profile.php">MON COMPTE</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="logout.php">DÉCONNEXION</a>
+                                    <a class="nav-link" href="logout.php">
+                                        <i class="fas fa-sign-out-alt me-1"></i>DÉCONNEXION
+                                    </a>
                                 </li>
                             <?php else: ?>
                                 <li class="nav-item">

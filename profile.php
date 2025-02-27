@@ -114,17 +114,17 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
         <!-- Onglets -->
         <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                <button class="nav-link active text-black" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
                     <i class="fas fa-user me-2"></i>Informations personnelles
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">
+                <button class="nav-link text-black" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">
                     <i class="fas fa-calendar-alt me-2"></i>Mes rendez-vous
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+                <button class="nav-link text-black" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
                     <i class="fas fa-cog me-2"></i>Paramètres du compte
                 </button>
             </li>
@@ -344,32 +344,6 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                                     </div>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-check me-2"></i>Mettre à jour le mot de passe
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Notifications -->
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <h4 class="card-title">
-                                    <i class="fas fa-bell me-2"></i>Notifications
-                                </h4>
-                                <form action="update_notifications.php" method="POST">
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" checked>
-                                        <label class="form-check-label" for="email_notifications">
-                                            Recevoir des notifications par email
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="sms_notifications" name="sms_notifications" checked>
-                                        <label class="form-check-label" for="sms_notifications">
-                                            Recevoir des notifications par SMS
-                                        </label>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Enregistrer les préférences
                                     </button>
                                 </form>
                             </div>
