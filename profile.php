@@ -23,6 +23,27 @@ $stmt_appointments->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 $stmt_appointments->execute();
 $appointments = $stmt_appointments->fetchAll(PDO::FETCH_ASSOC);
 
+function generateTimeSlots()
+{
+    $slots = [];
+    $start = strtotime("09:00");
+    $end = strtotime("17:00");
+    while ($start <= $end) {
+        $slots[] = date("H:i", $start);
+        $start = strtotime("+30 minutes", $start);
+    }
+    return $slots;
+}
+$timeSlots = generateTimeSlots();
+
+// Récupération des créneaux déjà réservés
+$sql_taken_slots = "SELECT date_heure FROM rendez_vous";
+$stmt_taken_slots = $pdo->query($sql_taken_slots);
+$takenSlots = [];
+while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
+    $takenSlots[] = date("H:i", strtotime($row['date_heure']));
+}
+
 ?>
 
 <!doctype html>
@@ -100,18 +121,45 @@ $appointments = $stmt_appointments->fetchAll(PDO::FETCH_ASSOC);
         <div class="card mb-4">
             <div class="card-body">
                 <h3>Rendez-vous</h3>
+                <form action="book_appointment.php" method="POST">
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Choisir une date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="time" class="form-label">Choisir une heure</label>
+                        <select class="form-control" id="time" name="time" required>
+                            <?php foreach ($timeSlots as $slot): ?>
+                                <option value="<?php echo $slot; ?>" <?php echo in_array($slot, $takenSlots) ? 'disabled' : ''; ?>><?php echo $slot; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Prendre rendez-vous</button>
+                </form>
+                <hr>
                 <ul class="list-group">
-                    <?php foreach ($appointments as $appointment): ?>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <?php echo date("d/m/Y H:i", strtotime($appointment['date_heure'])); ?>
-                            <a href="cancel_appointment.php?id=<?php echo $appointment['id']; ?>" class="btn btn-danger btn-sm">Annuler</a>
-                        </li>
-                    <?php endforeach; ?>
+                    <?php if (empty($appointments)): ?>
+                        <li class="list-group-item">Aucun rendez-vous programmé.</li>
+                    <?php else: ?>
+                        <?php foreach ($appointments as $appointment): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <?php echo date("d/m/Y H:i", strtotime($appointment['date_heure'])); ?>
+                                <a href="cancel_appointment.php?id=<?php echo $appointment['id']; ?>" class="btn btn-danger btn-sm">Annuler</a>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
 
         <div class="card">
+            <div class="card-body text-center">
+                <h3>Déconnexion</h3>
+                <a href="logout.php" class="btn btn-danger">Déconnexion</a>
+            </div>
+        </div>
+
+        <div class="card mt-4">
             <div class="card-body text-center">
                 <h3>Suppression du compte</h3>
                 <p>Cette action est irréversible.</p>
