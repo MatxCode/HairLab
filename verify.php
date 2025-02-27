@@ -69,7 +69,7 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav justify-content-center gap-4 fs-5">
                         <li class="nav-item">
-                            <a class="nav-link" href="index.html">HOME</a>
+                            <a class="nav-link" href="index.php">HOME</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="#">MON COMPTE</a>

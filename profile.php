@@ -70,10 +70,13 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav justify-content-center gap-4 fs-5">
                         <li class="nav-item">
-                            <a class="nav-link" href="index.html">HOME</a>
+                            <a class="nav-link" href="index.php">HOME</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="#">MON COMPTE</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="logout.php">DÉCONNEXION</a>
                         </li>
                     </ul>
                 </div>
@@ -152,23 +155,16 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-body text-center">
-                <h3>Déconnexion</h3>
-                <a href="logout.php" class="btn btn-danger">Déconnexion</a>
-            </div>
-        </div>
-
         <div class="card mt-4">
             <div class="card-body text-center">
                 <h3>Suppression du compte</h3>
                 <p>Cette action est irréversible.</p>
-                <a href="delete_account.php" class="btn btn-danger">Supprimer mon compte</a>
+                <a href="delete_account.php" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.');">Supprimer mon compte</a>
             </div>
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
