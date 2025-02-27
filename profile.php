@@ -7,6 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
+//token CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Récupération des informations de l'utilisateur
 $user_id = $_SESSION['user_id'];
@@ -121,6 +125,11 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
             <li class="nav-item" role="presentation">
                 <button class="nav-link text-black" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">
                     <i class="fas fa-calendar-alt me-2"></i>Mes rendez-vous
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-black" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">
+                    <i class="fas fa-envelope me-2"></i>Contact
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -298,6 +307,113 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                                 <?php endif; ?>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nouvel onglet Formulaire de contact -->
+            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h3 class="card-title mb-4 font-resto">Nous contacter</h3>
+                        <p class="mb-4">Vous avez une question ou besoin de renseignements ? N'hésitez pas à nous contacter via ce formulaire. Notre équipe vous répondra dans les plus brefs délais.</p>
+
+                        <form method="POST" action="send_contact.php">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <!-- Sujet du message -->
+                            <div class="mb-4">
+                                <label for="contact_subject" class="form-label">Sujet</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-tag"></i>
+                                    </span>
+                                    <select class="form-control" id="contact_subject" name="contact_subject" required>
+                                        <option value="">Sélectionnez un sujet</option>
+                                        <option value="info_services">Informations sur nos services</option>
+                                        <option value="prices">Demande de tarifs</option>
+                                        <option value="appointment">Question sur les rendez-vous</option>
+                                        <option value="complaint">Réclamation</option>
+                                        <option value="other">Autre demande</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Prénom et Nom préremplis -->
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="contact_prenom" class="form-label">Prénom</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="contact_prenom" name="contact_prenom"
+                                            value="<?php echo htmlspecialchars($user['prenom']); ?>" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="contact_nom" class="form-label">Nom</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="contact_nom" name="contact_nom"
+                                            value="<?php echo htmlspecialchars($user['nom']); ?>" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email prérempli -->
+                            <div class="mb-4">
+                                <label for="contact_email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="contact_email" name="contact_email"
+                                        value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                </div>
+                            </div>
+
+                            <!-- Téléphone prérempli -->
+                            <div class="mb-4">
+                                <label for="contact_telephone" class="form-label">Téléphone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="tel" class="form-control" id="contact_telephone" name="contact_telephone"
+                                        pattern="[0-9]{10}" placeholder="0123456789"
+                                        value="<?php echo htmlspecialchars($user['telephone']); ?>">
+                                </div>
+                            </div>
+
+                            <!-- Message -->
+                            <div class="mb-4">
+                                <label for="contact_message" class="form-label">Votre message</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-comment"></i>
+                                    </span>
+                                    <textarea class="form-control" id="contact_message" name="contact_message" rows="5" required
+                                        placeholder="Veuillez détailler votre demande..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Consentement RGPD -->
+                            <div class="mb-4 form-check">
+                                <input type="checkbox" class="form-check-input" id="contact_consent" name="contact_consent" required>
+                                <label class="form-check-label" for="contact_consent">
+                                    J'accepte que mes données personnelles soient traitées pour répondre à ma demande conformément à la politique de confidentialité.
+                                </label>
+                            </div>
+
+                            <!-- Bouton d'envoi -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-dark btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Envoyer ma demande
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
