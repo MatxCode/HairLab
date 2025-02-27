@@ -18,7 +18,7 @@ function sendEmail($to, $subject, $message)
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
-        $mail->setFrom('inscription@hairlab.com', 'HairLab');
+        $mail->setFrom('mateo.letertre@gmail.com', 'HairLab');
         $mail->addAddress($to);
 
         $mail->isHTML(true);
