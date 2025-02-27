@@ -13,12 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $time = $_POST['time'];
     $datetime = $date . ' ' . $time;
 
-    // Vérifier si le créneau est déjà réservé
-    $sql_check = "SELECT COUNT(*) FROM rendez_vous WHERE date_heure = :datetime";
+    // Vérifier si le créneau est déjà réservé pour la même date et heure
+    $sql_check = "SELECT COUNT(*) FROM rendez_vous WHERE date_jour = :date AND heure_rdv = :time";
     $stmt_check = $pdo->prepare($sql_check);
-    $stmt_check->bindParam(':datetime', $datetime, PDO::PARAM_STR);
+    $stmt_check->bindParam(':date', $date, PDO::PARAM_STR);
+    $stmt_check->bindParam(':time', $time, PDO::PARAM_STR);
     $stmt_check->execute();
     $count = $stmt_check->fetchColumn();
+
 
     if ($count > 0) {
         $_SESSION['error'] = "Ce créneau est déjà réservé. Veuillez choisir un autre horaire.";
@@ -27,10 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insérer le rendez-vous
-    $sql_insert = "INSERT INTO rendez_vous (user_id, date_heure) VALUES (:user_id, :datetime)";
+    $sql_insert = "INSERT INTO rendez_vous (user_id, date_jour, heure_rdv) VALUES (:user_id, :date, :time)";
     $stmt_insert = $pdo->prepare($sql_insert);
     $stmt_insert->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-    $stmt_insert->bindParam(':datetime', $datetime, PDO::PARAM_STR);
+    $stmt_insert->bindParam(':date', $date, PDO::PARAM_STR);
+    $stmt_insert->bindParam(':time', $time, PDO::PARAM_STR);
+
     if ($stmt_insert->execute()) {
         $_SESSION['success'] = "Rendez-vous pris avec succès !";
     } else {
@@ -43,3 +47,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: profile.php");
     exit;
 }
+?>
