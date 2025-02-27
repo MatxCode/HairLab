@@ -2,44 +2,98 @@
 session_start();
 require_once 'config/database.php'; // Fichier contenant la connexion à la base de données
 
-// Initialisation des variables
+// Protection CSRF : Génération du token s'il n'existe pas encore
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Limitation des tentatives de connexion
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = 0;
+}
+
+$max_attempts = 5; // Nombre maximum de tentatives avant blocage temporaire
+$lockout_time = 300; // Temps de blocage en secondes (5 minutes)
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = trim($_POST['email']);
+    // Vérification du token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $_SESSION['error'] = "Échec de vérification CSRF. Veuillez réessayer.";
+        header("Location: login.php");
+        exit;
+    }
+
+    // Vérification du blocage temporaire
+    if ($_SESSION['login_attempts'] >= $max_attempts) {
+        $remaining_time = $_SESSION['lockout_time'] - time();
+        if ($remaining_time > 0) {
+            $_SESSION['error'] = "Trop de tentatives. Réessayez dans " . ceil($remaining_time / 60) . " minutes.";
+            header("Location: login.php");
+            exit;
+        } else {
+            // Réinitialisation après expiration du temps de blocage
+            $_SESSION['login_attempts'] = 0;
+            unset($_SESSION['lockout_time']);
+        }
+    }
+
+    // Nettoyage des entrées utilisateur
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
 
     if (!empty($email) && !empty($password)) {
-        // Vérifier si l'utilisateur existe
-        $sql = "SELECT id, nom, prenom, password, verified FROM users WHERE email = :email";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Vérifier si l'utilisateur existe
+            $sql = "SELECT id, nom, prenom, password, verified FROM users WHERE email = :email";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user && password_verify($password, $user['password'])) {
-            // Vérifier si le compte est activé
-            if ($user['verified'] == 0) {
-                $_SESSION['error'] = "Votre compte n'est pas encore activé. Veuillez vérifier votre email pour activer votre compte.";
-                header("Location: login.php");
+            if ($user && password_verify($password, $user['password'])) {
+                // Vérifier si le compte est activé
+                if ($user['verified'] == 0) {
+                    $_SESSION['error'] = "Votre compte n'est pas encore activé. Veuillez vérifier votre email.";
+                    header("Location: login.php");
+                    exit;
+                }
+
+                // Authentification réussie : Réinitialisation des tentatives et stockage des informations en session
+                $_SESSION['login_attempts'] = 0;
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = htmlspecialchars($user['prenom'] . ' ' . $user['nom'], ENT_QUOTES, 'UTF-8');
+
+                // Suppression du token CSRF après connexion
+                unset($_SESSION['csrf_token']);
+
+                // Redirection vers la page de profil
+                header("Location: profile.php");
                 exit;
+            } else {
+                // Incrémentation des tentatives de connexion
+                $_SESSION['login_attempts']++;
+
+                if ($_SESSION['login_attempts'] >= $max_attempts) {
+                    $_SESSION['lockout_time'] = time() + $lockout_time;
+                    $_SESSION['error'] = "Trop de tentatives. Réessayez dans 5 minutes.";
+                } else {
+                    $_SESSION['error'] = "Email ou mot de passe incorrect.";
+                }
             }
-
-            // Authentification réussie : on stocke les infos en session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['prenom'] . ' ' . $user['nom'];
-
-            // Redirection vers la page de profil
-            header("Location: profile.php");
-            exit;
-        } else {
-            $error = "Email ou mot de passe incorrect.";
+        } catch (PDOException $e) {
+            $_SESSION['error'] = "Une erreur est survenue. Veuillez réessayer.";
+            error_log("Erreur de connexion : " . $e->getMessage());
         }
     } else {
-        $error = "Veuillez remplir tous les champs.";
+        $_SESSION['error'] = "Veuillez remplir tous les champs.";
     }
+
+    header("Location: login.php");
+    exit;
 }
 ?>
+
 
 <!doctype html>
 <html lang="fr">
@@ -114,7 +168,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         <?php endif; ?>
 
-                        <form action="login.php" method="POST">
+                        <form method="POST" action="login.php">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <div class="mb-4">
                                 <label for="email" class="form-label">Email</label>
                                 <div class="input-group">

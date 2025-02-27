@@ -5,26 +5,26 @@ require 'config/database.php'; // Connexion à la BDD
 $errors = [];
 $success = false;
 
-// Vérification si un token est présent dans l'URL
-if (isset($_GET['token']) && !empty($_GET['token'])) {
-    $token = $_GET['token'];
+// Vérification si un token est présent dans l'URL et non vide
+if (!empty($_GET['token'])) {
+    $token = trim($_GET['token']);
 
     try {
         // Recherche de l'utilisateur avec ce token
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE token = :token");
-        $stmt->execute([':token' => $token]);
+        $stmt = $pdo->prepare("SELECT id, verified FROM users WHERE token = :token");
+        $stmt->bindParam(':token', $token, PDO::PARAM_STR);
+        $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
-            // Vérifier si le compte n'est pas déjà activé
             if ($user['verified'] == 1) {
                 $_SESSION['info'] = "Votre compte est déjà activé. Vous pouvez vous connecter.";
             } else {
                 // Mettre à jour le statut de vérification et vider le token
                 $update_stmt = $pdo->prepare("UPDATE users SET verified = 1, token = '' WHERE id = :id");
-                $update_stmt->execute([':id' => $user['id']]);
+                $update_stmt->bindParam(':id', $user['id'], PDO::PARAM_INT);
 
-                if ($update_stmt->rowCount() > 0) {
+                if ($update_stmt->execute() && $update_stmt->rowCount() > 0) {
                     $success = true;
                     $_SESSION['success'] = "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter.";
                 } else {
@@ -35,12 +35,13 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
             $errors[] = "Token invalide ou expiré.";
         }
     } catch (PDOException $e) {
-        $errors[] = "Erreur de base de données: " . $e->getMessage();
+        $errors[] = "Erreur de base de données : " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
     }
 } else {
     $errors[] = "Aucun token fourni.";
 }
 ?>
+
 
 <!doctype html>
 <html lang="fr">

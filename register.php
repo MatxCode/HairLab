@@ -3,63 +3,97 @@ session_start();
 require 'config/database.php'; // Connexion à la BDD
 require 'send_mail.php';
 
+// Protection CSRF : Génération du token s'il n'existe pas encore
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nom = trim($_POST['nom']);
-    $prenom = trim($_POST['prenom']);
+    // Vérification du token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $_SESSION['error'] = "Échec de vérification CSRF. Veuillez réessayer.";
+        header("Location: register.php");
+        exit;
+    }
+
+    // Nettoyage et validation des entrées
+    $nom = htmlspecialchars(trim($_POST['nom']), ENT_QUOTES, 'UTF-8');
+    $prenom = htmlspecialchars(trim($_POST['prenom']), ENT_QUOTES, 'UTF-8');
     $date_naissance = $_POST['date_naissance'];
-    $adresse = trim($_POST['adresse']);
+    $adresse = htmlspecialchars(trim($_POST['adresse']), ENT_QUOTES, 'UTF-8');
     $telephone = trim($_POST['telephone']);
-    $email = trim($_POST['email']);
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
     $password_confirm = $_POST['password_confirm'];
 
+    // Validation des champs
     if (empty($nom) || empty($prenom) || empty($date_naissance) || empty($adresse) || empty($telephone) || empty($email) || empty($password) || empty($password_confirm)) {
         $errors[] = "Tous les champs sont requis.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Email invalide.";
-    } elseif ($password !== $password_confirm) {
-        $errors[] = "Les mots de passe ne correspondent pas.";
-    } elseif (!preg_match('/^\d{10}$/', $telephone)) {
+    }
+    if (!preg_match('/^\d{10}$/', $telephone)) {
         $errors[] = "Le numéro de téléphone doit contenir 10 chiffres.";
+    }
+    if (strlen($password) < 8) {
+        $errors[] = "Le mot de passe doit contenir au moins 8 caractères.";
+    }
+    if ($password !== $password_confirm) {
+        $errors[] = "Les mots de passe ne correspondent pas.";
     }
 
     if (empty($errors)) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $token = bin2hex(random_bytes(50)); // Génération d'un token unique
-
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (nom, prenom, date_naissance, adresse, telephone, email, password, token) VALUES (:nom, :prenom, :date_naissance, :adresse, :telephone, :email, :password, :token)");
-            $stmt->execute([
-                ':nom' => $nom,
-                ':prenom' => $prenom,
-                ':date_naissance' => $date_naissance,
-                ':adresse' => $adresse,
-                ':telephone' => $telephone,
-                ':email' => $email,
-                ':password' => $hashed_password,
-                ':token' => $token
-            ]);
-
-            // Envoi de l'email de confirmation
-            $subject = "Activation de votre compte";
-            $message = "Cliquez sur ce lien pour activer votre compte : http://localhost/TP-03/verify.php?token=$token";
-            sendEmail($email, $subject, $message);
-
-            $_SESSION['success'] = "Un email de confirmation a été envoyé.";
-            header("Location: login.php");
-            exit;
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
+            // Vérification si l'email est déjà utilisé
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+            $stmt->execute([':email' => $email]);
+            if ($stmt->fetch()) {
                 $errors[] = "Cet email est déjà utilisé.";
             } else {
-                $errors[] = "Erreur lors de l'inscription.";
+                // Hash du mot de passe et génération d’un token de validation
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $token = bin2hex(random_bytes(50));
+
+                // Insertion des données dans la base
+                $stmt = $pdo->prepare("INSERT INTO users (nom, prenom, date_naissance, adresse, telephone, email, password, token) VALUES (:nom, :prenom, :date_naissance, :adresse, :telephone, :email, :password, :token)");
+                $stmt->execute([
+                    ':nom' => $nom,
+                    ':prenom' => $prenom,
+                    ':date_naissance' => $date_naissance,
+                    ':adresse' => $adresse,
+                    ':telephone' => $telephone,
+                    ':email' => $email,
+                    ':password' => $hashed_password,
+                    ':token' => $token
+                ]);
+
+                // Envoi de l'email de confirmation
+                $subject = "Activation de votre compte";
+                $message = "Cliquez sur ce lien pour activer votre compte : http://localhost/TP-03/verify.php?token=$token";
+                sendEmail($email, $subject, $message);
+
+                $_SESSION['success'] = "Un email de confirmation a été envoyé.";
+                header("Location: login.php");
+                exit;
             }
+        } catch (PDOException $e) {
+            error_log("Erreur d'inscription : " . $e->getMessage());
+            $errors[] = "Une erreur est survenue. Veuillez réessayer.";
         }
     }
 }
+
+// Stockage des erreurs en session
+if (!empty($errors)) {
+    $_SESSION['errors'] = $errors;
+    header("Location: register.php");
+    exit;
+}
 ?>
+
 
 <!doctype html>
 <html lang="fr">
@@ -127,7 +161,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         <?php endif; ?>
 
-                        <form action="register.php" method="POST">
+                        <form method="POST" action="register.php">
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <div class="row">
                                 <!-- Prénom -->
                                 <div class="col-md-6 mb-4">

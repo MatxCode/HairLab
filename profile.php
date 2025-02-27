@@ -242,6 +242,7 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                             <div class="card-body p-5">
                                 <h3 class="card-title mb-4 font-resto">Prendre rendez-vous</h3>
                                 <form action="book_appointment.php" method="POST">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                     <div class="mb-4">
                                         <label for="date" class="form-label">Choisir une date</label>
                                         <div class="input-group">
@@ -296,7 +297,7 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                                                     à
                                                     <span><?php echo $appointment['heure_rdv']; ?></span>
                                                 </div>
-                                                <a href="cancel_appointment.php?id=<?php echo $appointment['id']; ?>"
+                                                <a href="cancel_appointment.php?id=<?php echo $appointment['id']; ?>&csrf_token=<?php echo $_SESSION['csrf_token']; ?>"
                                                     class="btn btn-outline-danger btn-sm"
                                                     onclick="return confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?');">
                                                     <i class="fas fa-times me-1"></i>Annuler
@@ -430,7 +431,8 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                                 <h4 class="card-title">
                                     <i class="fas fa-lock me-2"></i>Changer le mot de passe
                                 </h4>
-                                <form action="change_password.php" method="POST">
+                                <form method="POST" action="change_password.php">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                     <div class="mb-3">
                                         <label for="current_password" class="form-label">Mot de passe actuel</label>
                                         <div class="input-group">
@@ -472,7 +474,7 @@ while ($row = $stmt_taken_slots->fetch(PDO::FETCH_ASSOC)) {
                                     <i class="fas fa-exclamation-triangle me-2"></i>Zone dangereuse
                                 </h4>
                                 <p class="card-text">La suppression de votre compte est une action définitive. Toutes vos données personnelles et vos rendez-vous seront supprimés de façon permanente.</p>
-                                <a href="delete_account.php" class="btn btn-outline-danger"
+                                <a href="delete_account.php?csrf_token=<?php echo $_SESSION['csrf_token']; ?>" class="btn btn-outline-danger"
                                     onclick="return confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte ? Cette action est irréversible et toutes vos données seront perdues.');">
                                     <i class="fas fa-trash-alt me-2"></i>Supprimer mon compte
                                 </a>
