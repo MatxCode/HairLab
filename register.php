@@ -1,7 +1,7 @@
 <?php
 session_start();
 require 'config/database.php'; // Connexion à la BDD
-require 'send_mail.php';
+//require 'send_mail.php';
 
 // Protection CSRF : Génération du token s'il n'existe pas encore
 if (empty($_SESSION['csrf_token'])) {
@@ -73,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Envoi de l'email de confirmation
                 $subject = "Activation de votre compte";
                 $message = "Cliquez sur ce lien pour activer votre compte : http://localhost/TP-03/verify.php?token=$token";
-                sendEmail($email, $subject, $message);
+                //sendEmail($email, $subject, $message);
 
                 $_SESSION['success'] = "Un email de confirmation a été envoyé.";
                 header("Location: login.php");
