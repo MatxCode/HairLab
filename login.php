@@ -53,11 +53,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($user && password_verify($password, $user['password'])) {
                 // Vérifier si le compte est activé
-                if ($user['verified'] == 0) {
-                    $_SESSION['error'] = "Votre compte n'est pas encore activé. Veuillez vérifier votre email.";
-                    header("Location: login.php");
-                    exit;
-                }
+                //Mis en commentaire pour le déploiement
+                // if ($user['verified'] == 0) {
+                //     $_SESSION['error'] = "Votre compte n'est pas encore activé. Veuillez vérifier votre email.";
+                //     header("Location: login.php");
+                //     exit;
+                // }
 
                 // Authentification réussie : Réinitialisation des tentatives et stockage des informations en session
                 $_SESSION['login_attempts'] = 0;
